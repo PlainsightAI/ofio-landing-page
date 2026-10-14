@@ -17,20 +17,21 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: cloudflare-pages
-      url: ${{ steps.publish.outputs.url }}
+      url: ${{ steps.publish.outputs.deployment-url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Publish to Cloudflare Pages
         id: publish
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.PS_CLOUDFLARE_GHP_TOKEN }}
-          accountId: ${{ secrets.PS_CLOUDFLARE_GHP_ACCOUNT_ID }}
-          projectName: openfilter
-          directory: site
-          branch: ${{ github.head_ref || github.ref_name }}
+          apiToken: ${{ secrets.PS_CLOUDFLARE_TOKEN }}
+          accountId: ${{ secrets.PS_CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy site
+            --project-name=openfilter
+            --branch=${{ github.head_ref || github.ref_name }}
 
       - name: Comment with Preview URL
         if: github.event_name == 'pull_request'
@@ -38,7 +39,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const url = `${{ steps.publish.outputs.url }}`
+            const url = `${{ steps.publish.outputs.deployment-url }}`
             const sha = '${{ github.event.pull_request.head.sha }}'.substring(0, 7)
             const comment = `### 🚀 Preview Deployed\n| Commit | Preview URL |\n|--------|-------------|\n| \`${sha}\` | ${url} |`
 
